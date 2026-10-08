@@ -48,16 +48,35 @@
       gtag('js', new Date());
       gtag('config', 'G-LZRG6ZN7KF');
 
+      // Redirect once, after both analytics hits have had their chance:
+      //  - GA4 confirms via event_callback,
+      //  - the Meta pixel has no callback, so we wait until fbevents.js has loaded
+      //    (fbq.callMethod appears then, and the queued events are flushed),
+      //  - or a hard timeout if either never arrives (ad blocker, offline).
+      // Do NOT add a synchronous redirect below: it fires before the async
+      // gtag.js/fbevents.js have loaded and the queued hits are lost.
+      var redirected = false;
+      var gaDone = false;
+      function go() {
+        if (redirected) return;
+        redirected = true;
+        // WHEN YOU CHANGE THIS - CHANGE whatsapp-pixel-event AS WELL!!
+        document.location = "https://chat.whatsapp.com/GwHyNFE9de0GzoL6JYq19C";
+      }
+      function pixelLoaded() {
+        return !!(window.fbq && window.fbq.callMethod);
+      }
+      function maybeGo() {
+        if (gaDone && pixelLoaded()) go();
+      }
       gtag('event', 'redirect', {
         'event_category': 'outbound',
         'event_label': 'whatsapp',
         'transport_type': 'beacon',
-        'event_callback': function () {
-          // WHEN YOU CHANGE THIS - CHANGE whatsapp-pixel-event AS WELL!!
-          document.location = "https://chat.whatsapp.com/GwHyNFE9de0GzoL6JYq19C";
-        }
+        'event_callback': function () { gaDone = true; maybeGo(); }
       });
-      document.location = "https://chat.whatsapp.com/GwHyNFE9de0GzoL6JYq19C";
+      var poll = setInterval(function () { maybeGo(); if (redirected) clearInterval(poll); }, 50);
+      setTimeout(go, 2500);
     } catch (e) {
       document.location = "https://chat.whatsapp.com/GwHyNFE9de0GzoL6JYq19C";
     }

@@ -12,14 +12,24 @@
 
                 gtag('config', 'G-LZRG6ZN7KF');
 
+                // Redirect once, after the analytics hit has been sent (event_callback),
+                // or after a short timeout if it never comes back (ad blocker, offline).
+                // Do NOT add a synchronous redirect below: it fires before the async
+                // gtag.js/fbevents.js have loaded and the queued hits are lost.
+                var redirected = false;
+                function go() {
+                  if (redirected) return;
+                  redirected = true;
+                  document.location = "https://www.facebook.com/groups/763859465058650";
+                }
                 gtag('event', 'redirect', {
-                    'event_category': 'outbound',
-                    'event_label': 'facebook-group',
-                    'transport_type': 'beacon',
-                    'event_callback': function () { document.location = "https://www.facebook.com/groups/763859465058650"; }
+                  'event_category': 'outbound',
+                  'event_label': 'facebook-group',
+                  'transport_type': 'beacon',
+                  'event_callback': go
                 });
-                document.location = "https://www.facebook.com/groups/763859465058650";
-            } catch (e){
+                setTimeout(go, 1500);
+            } catch (e) {
                 document.location = "https://www.facebook.com/groups/763859465058650";
             }
         </script>
